@@ -5,58 +5,66 @@ import Hotel from '../components/Hotel';
 export default function HotelList() {
   const [hotels, setHotels] = useState([]);
   const [search, setSearch] = useState('');
-  const [Criterio, setCriterio] = useState('');
+  const [criterio, setCriterio] = useState('');
 
   useEffect(() => {
     const storedHotels = JSON.parse(localStorage.getItem('hotels')) || [];
     setHotels(storedHotels);
   }, []);
 
-  const filtroHotel = hotels
-    .filter((hotel) => 
-      hotel.name.toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (Criterio === 'price') {
-        return a.price - b.price;
-      } else if (Criterio === 'class') {
-        return b.class - a.class;
-      } else {
-        return 0;
-      }
-    });
+  const sortOptions = {
+    'price-desc': (a, b) => b.price - a.price,      // Preço do maior para o menor
+    'price-asc': (a, b) => a.price - b.price,      // Preço do menor para o maior
+    'aval-desc': (a, b) => b.aval - a.aval,        // Classificação do maior para o menor
+    'aval-asc': (a, b) => a.aval - b.aval,        // Classificação do menor para o maior
+  };
+
+  const filteredHotels = hotels.filter((hotel) =>
+    hotel.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const sortedHotels = criterio ? [...filteredHotels].sort(sortOptions[criterio]) : filteredHotels;
 
   return (
-    <div>
+    <div className="hotel-list-container">
       <h1>Lista de Hotéis</h1>
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Pesquisar"
-      />
+
+      <div className="search-sort-container">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Pesquisar"
+          className="search-input"
+        />
 
         <select
-          value={Criterio}
+          value={criterio}
           onChange={(e) => setCriterio(e.target.value)}
           className="sort-select"
         >
           <option value="">Ordenar por</option>
-          <option value="price">Preço</option>
-          <option value="class">Classificação</option>
+          <option value="price-desc">Preço (Maior para o menor)</option>
+          <option value="price-asc">Preço (Menor para o maior)</option>
+          <option value="aval-desc">Classificação (Maior para o menor)</option>
+          <option value="aval-asc">Classificação (Menor para o maior)</option>
         </select>
+      </div>
 
-      <div>
-        {filtroHotel.length > 0 ? (
-          filtroHotel.map((hotel) => (
+      <div className="cards-container">
+        {sortedHotels.length > 0 ? (
+          sortedHotels.map((hotel) => (
             <Hotel key={hotel.id} hotel={hotel} />
           ))
         ) : (
           <p>Nenhum hotel encontrado.</p>
         )}
       </div>
-      <Link to="/add">Adicionar Novo Hotel</Link>
-      <Link to="/favorites">Ver Favoritos</Link> 
+
+      <div className="navigation-links">
+        <Link to="/add" className="add-link">Adicionar Novo Hotel</Link>
+        <Link to="/favorites" className="favorites-link">Ver Favoritos</Link>
+      </div>
     </div>
   );
 }
