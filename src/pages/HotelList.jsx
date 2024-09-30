@@ -12,6 +12,17 @@ export default function HotelList() {
     setHotels(storedHotels);
   }, []);
 
+  const toggleFavorite = (id) => {
+    const updatedHotels = hotels.map((hotel) => {
+      if (hotel.id === id) {
+        return { ...hotel, isFavorite: !hotel.isFavorite };
+      }
+      return hotel;
+    });
+    setHotels(updatedHotels);
+    localStorage.setItem('hotels', JSON.stringify(updatedHotels));
+  };
+
   const sortOptions = {
     'price-desc': (a, b) => b.price - a.price,      // Preço do maior para o menor
     'price-asc': (a, b) => a.price - b.price,      // Preço do menor para o maior
@@ -54,7 +65,7 @@ export default function HotelList() {
       <div className="cards-container">
         {sortedHotels.length > 0 ? (
           sortedHotels.map((hotel) => (
-            <Hotel key={hotel.id} hotel={hotel} />
+            <Hotel key={hotel.id} hotel={hotel} toggleFavorite={toggleFavorite} />
           ))
         ) : (
           <p>Nenhum hotel encontrado.</p>

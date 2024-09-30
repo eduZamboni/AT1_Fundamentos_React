@@ -31,8 +31,9 @@ export default function AddHotel() {
     setAddImages(newAddImages);
   };
 
+  // Função para validar URLs
   const isValidURL = (string) => {
-    const res = string.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif|svg))/i);
+    const res = string.match(/^(https?:\/\/.*\.)/i);
     return res !== null;
   };
 
@@ -57,7 +58,7 @@ export default function AddHotel() {
       newErrors.estado = 'O estado é obrigatório.';
     }
 
-    if (!price) {
+    if (price === '') {
       newErrors.price = 'O preço é obrigatório.';
     } else if (isNaN(price) || parseFloat(price) < 0) {
       newErrors.price = 'O preço deve ser um número positivo.';
@@ -78,6 +79,7 @@ export default function AddHotel() {
     });
 
     setErrors(newErrors);
+    console.log('Erros', newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -85,27 +87,38 @@ export default function AddHotel() {
     e.preventDefault();
 
     if (validateForm()) {
-      const newHotel = {
-        id: Date.now().toString(),
-        name,
-        image,
-        aval: parseInt(aval, 10),
-        cidade,
-        estado,
-        price: parseFloat(price),
-        description,
-        addImages: addImages.filter((img) => img.trim() !== ''),
-        servicos,
-      };
+      try {
+        const newHotel = {
+          id: Date.now().toString(),
+          name: name.trim(),
+          image: image.trim(),
+          aval: parseInt(aval, 10),
+          cidade: cidade.trim(),
+          estado: estado.trim(),
+          price: parseFloat(price),
+          description: description.trim(),
+          addImages: addImages.filter((img) => img.trim() !== ''),
+          servicos: servicos.trim(),
+          isFavorite: false,
+        };
 
-      const storedHotels = JSON.parse(localStorage.getItem('hotels')) || [];
-      localStorage.setItem('hotels', JSON.stringify([...storedHotels, newHotel]));
-      navigate('/');
-    };
-  }
+        const storedHotels = JSON.parse(localStorage.getItem('hotels')) || [];
+        localStorage.setItem('hotels', JSON.stringify([...storedHotels, newHotel]));
+
+        alert('Hotel cadastrado com sucesso!');
+        navigate('/');
+      } catch (error) {
+        console.error('Erro', error);
+        alert('Falha ao salvar o hotel. Por favor, tente novamente.');
+      }
+    } else {
+      console.log('Validação falhou.');
+      alert('Por favor, corrija os erros no formulário.');
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="add-hotel-form">
       <h1>Adicionar Novo Hotel</h1>
 
       <label>
@@ -115,6 +128,7 @@ export default function AddHotel() {
           placeholder="Nome do Hotel"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          className={errors.name ? 'error-input' : ''}
           required
         />
         {errors.name && <span className="error-message">{errors.name}</span>}
@@ -127,6 +141,7 @@ export default function AddHotel() {
           placeholder="URL da Imagem Principal"
           value={image}
           onChange={(e) => setImage(e.target.value)}
+          className={errors.image ? 'error-input' : ''}
           required
         />
         {errors.image && <span className="error-message">{errors.image}</span>}
@@ -134,7 +149,10 @@ export default function AddHotel() {
 
       <label>
         Classificação:
-        <select value={aval} onChange={(e) => setAval(e.target.value)}>
+        <select
+          value={aval}
+          onChange={(e) => setAval(e.target.value)}
+        >
           {[1, 2, 3, 4, 5].map((num) => (
             <option key={num} value={num}>
               {num} Estrela{num > 1 ? 's' : ''}
@@ -150,6 +168,7 @@ export default function AddHotel() {
           placeholder="Cidade"
           value={cidade}
           onChange={(e) => setCidade(e.target.value)}
+          className={errors.cidade ? 'error-input' : ''}
           required
         />
         {errors.cidade && <span className="error-message">{errors.cidade}</span>}
@@ -162,6 +181,7 @@ export default function AddHotel() {
           placeholder="Estado"
           value={estado}
           onChange={(e) => setEstado(e.target.value)}
+          className={errors.estado ? 'error-input' : ''}
           required
         />
         {errors.estado && <span className="error-message">{errors.estado}</span>}
@@ -174,6 +194,7 @@ export default function AddHotel() {
           placeholder="Preço"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
+          className={errors.price ? 'error-input' : ''}
           required
         />
         {errors.price && <span className="error-message">{errors.price}</span>}
@@ -185,6 +206,7 @@ export default function AddHotel() {
           placeholder="Descrição do Hotel"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          className={errors.description ? 'error-input' : ''}
           required
         />
         {errors.description && <span className="error-message">{errors.description}</span>}
@@ -193,12 +215,13 @@ export default function AddHotel() {
       <label>
         Imagens Adicionais (URLs):
         {addImages.map((img, index) => (
-          <div key={index}>
+          <div key={index} className="additional-image-field">
             <input
               type="text"
               placeholder={`URL da Imagem ${index + 1}`}
               value={img}
               onChange={(e) => handleAddImageChange(index, e.target.value)}
+              className={errors[`addImages_${index}`] ? 'error-input' : ''}
             />
             {addImages.length > 1 && (
               <button
@@ -214,7 +237,11 @@ export default function AddHotel() {
             )}
           </div>
         ))}
-        <button type="button" onClick={handleAddImageField} >
+        <button
+          type="button"
+          onClick={handleAddImageField}
+          className="add-image-button"
+        >
           Adicionar Imagem
         </button>
       </label>
@@ -223,15 +250,19 @@ export default function AddHotel() {
         Serviços:
         <input
           type="text"
+          name="servicos"
           placeholder="Serviços oferecidos"
           value={servicos}
           onChange={(e) => setServicos(e.target.value)}
+          className={errors.servicos ? 'error-input' : ''}
           required
         />
         {errors.servicos && <span className="error-message">{errors.servicos}</span>}
       </label>
 
-      <button type="submit">Salvar</button>
+      <button type="submit" className="save-button">
+        Salvar
+      </button>
     </form>
   );
 }

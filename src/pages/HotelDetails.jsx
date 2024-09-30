@@ -15,16 +15,17 @@ export default function HotelDetails() {
   }, [id]);
 
   const toggleFavorite = () => {
-    const storedFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    let updatedFavorites;
+    const storedHotels = JSON.parse(localStorage.getItem('hotels')) || [];
+    const updatedHotels = storedHotels.map((h) => {
+      if (h.id === id) {
+        return { ...h, isFavorite: !h.isFavorite };
+      }
+      return h;
+    });
+    localStorage.setItem('hotels', JSON.stringify(updatedHotels));
 
-    if (storedFavorites.includes(id)) {
-      updatedFavorites = storedFavorites.filter((favId) => favId !== id);
-    } else {
-      updatedFavorites = [...storedFavorites, id];
-    }
-
-    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+    const updatedHotel = updatedHotels.find((h) => h.id === id);
+    setHotel(updatedHotel);
   };
 
   if (!hotel) {

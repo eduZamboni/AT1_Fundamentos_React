@@ -1,29 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Hotel from '../components/Hotel';
 
-export default function Favts() {
-  const [favHotels, setFavHotels] = useState([]);
+export default function Favorites() {
+  const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
     const storedHotels = JSON.parse(localStorage.getItem('hotels')) || [];
-    const storedFavts = JSON.parse(localStorage.getItem('favoritos')) || [];
-    const favts = storedHotels.filter((hotel) =>
-      storedFavts.includes(hotel.id)
-    );
-    setFavHotels(favts);
+    const favoriteHotels = storedHotels.filter((hotel) => hotel.isFavorite);
+    setFavorites(favoriteHotels);
   }, []);
 
+  const toggleFavorite = (id) => {
+    const storedHotels = JSON.parse(localStorage.getItem('hotels')) || [];
+    const updatedHotels = storedHotels.map((hotel) => {
+      if (hotel.id === id) {
+        return { ...hotel, isFavorite: !hotel.isFavorite };
+      }
+      return hotel;
+    });
+    localStorage.setItem('hotels', JSON.stringify(updatedHotels));
+    const updatedFavorites = updatedHotels.filter((hotel) => hotel.isFavorite);
+    setFavorites(updatedFavorites);
+  };
+
   return (
-    <div>
+    <div className="favorites-container">
       <h1>Hotéis Favoritos</h1>
-      {favHotels.map((hotel) => (
-        <div key={hotel.id} className="hotel-card">
-          <img src={hotel.image} alt={hotel.name} />
-          <h2>{hotel.name}</h2>
-          <Link to={`/details/${hotel.id}`}>Ver Detalhes</Link>
-        </div>
-      ))}
-      <Link to="/">Voltar à Lista</Link>
+
+      <div className="cards-container">
+        {favorites.length > 0 ? (
+          favorites.map((hotel) => (
+            <Hotel key={hotel.id} hotel={hotel} toggleFavorite={toggleFavorite} />
+          ))
+        ) : (
+          <p>Você não tem nenhum hotel favorito.</p>
+        )}
+      </div>
+
+      <div className="navigation-links">
+        <Link to="/add" className="add-link">Adicionar Novo Hotel</Link>
+        <Link to="/" className="back-link">Voltar para a Lista</Link>
+      </div>
     </div>
   );
-}
+};
